@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manga Calculator</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #171717;
+            --paper: #fff8e8;
+            --red: #e53935;
+            --yellow: #ffd84d;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Arial Black", Impact, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: var(--paper);
+            background-image: radial-gradient(#171717 0.8px, transparent 0.8px);
+            background-size: 14px 14px;
+            margin: 0;
+            padding: 32px 20px;
+            color: var(--ink);
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            padding: 5px 12px;
+            color: var(--ink);
+            background: var(--yellow);
+            border: 3px solid var(--ink);
+            box-shadow: 5px 5px 0 var(--ink);
+            font-size: 28px;
+            text-align: center;
+            transform: rotate(-1deg);
+        }
+
+        .subtitle {
+            margin: 14px 0 24px;
+            padding: 4px 9px;
+            color: white;
+            background: var(--ink);
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .option-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .option-btn {
+            min-width: 132px;
+            padding: 11px 16px;
+            color: var(--ink);
+            background-color: white;
+            border: 3px solid var(--ink);
+            box-shadow: 3px 3px 0 var(--ink);
+            font: bold 16px "Arial Black", Impact, sans-serif;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+        }
+
+        .option-btn.active,
+        .option-btn:hover {
+            background-color: var(--red);
+            color: white;
+        }
+
+        .option-btn:active,
+        button.calc-key:active {
+            transform: translate(3px, 3px);
+            box-shadow: none;
+        }
+
+        .calc-wrapper {
+            width: 100%;
+            max-width: 360px;
+            padding: 16px;
+            background: white;
+            border: 4px solid var(--ink);
+            box-shadow: 8px 8px 0 var(--ink);
+            animation: pop-in 220ms ease-out;
+        }
+
+        .display {
+            width: 100%;
+            height: 64px;
+            margin-bottom: 14px;
+            padding: 8px 12px;
+            color: var(--ink);
+            background: var(--paper);
+            border: 3px solid var(--ink);
+            font: bold 26px "Arial Black", Impact, sans-serif;
+            text-align: right;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .grid-simple,
+        .grid-scientific {
+            display: grid;
+            gap: 9px;
+        }
+
+        .grid-simple {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .grid-scientific {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+
+        button.calc-key {
+            min-width: 0;
+            min-height: 52px;
+            padding: 8px 3px;
+            color: var(--ink);
+            background: #f1f1f1;
+            border: 2px solid var(--ink);
+            box-shadow: 2px 2px 0 var(--ink);
+            font: bold 17px "Arial Black", Impact, sans-serif;
+            cursor: pointer;
+            transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease;
+        }
+
+        button.calc-key:hover {
+            background: #dedede;
+        }
+
+        button.operator {
+            color: var(--ink);
+            background: var(--yellow);
+        }
+
+        button.operator:hover {
+            background: #ffc928;
+        }
+
+        button.clear {
+            color: white;
+            background: var(--red);
+        }
+
+        button.clear:hover {
+            background: #c62828;
+        }
+
+        button.backspace {
+            color: white;
+            background: var(--ink);
+        }
+
+        button.backspace:hover {
+            background: #444;
+        }
+
+        @keyframes pop-in {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @media (max-width: 380px) {
+            .calc-wrapper {
+                padding: 11px;
+            }
+
+            .grid-simple,
+            .grid-scientific {
+                gap: 7px;
+            }
+
+            button.calc-key {
+                min-height: 48px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Title Header -->
+    <h1 id="main-title">Manga Calculator</h1>
+    <div class="subtitle">Choose your mode</div>
+
+    <!-- The Two Selection Options (Stacked vertically) -->
+    <div class="option-container">
+        <button id="btn-simple" class="option-btn" onclick="toggleInterface('simple')">Simple</button>
+        <button id="btn-scientific" class="option-btn" onclick="toggleInterface('scientific')">Scientific</button>
+    </div>
+
+    <!-- Calculator Shell (Hidden until an option is tapped) -->
+    <div id="calculator-shell" class="calc-wrapper hidden">
+        <input type="text" id="display" class="display" readonly value="0">
+
+        <!-- Simple Mode Grid -->
+        <div id="simple-layout" class="grid-simple hidden">
+            <button class="calc-key clear" onclick="clearDisplay()">C</button>
+            <button class="calc-key backspace" aria-label="Backspace" title="Backspace" onclick="backspace()">⌫</button>
+            <button class="calc-key operator" onclick="appendInput('/')">/</button>
+            <button class="calc-key operator" onclick="appendInput('*')">*</button>
+            
+            <button class="calc-key" onclick="appendInput('7')">7</button>
+            <button class="calc-key" onclick="appendInput('8')">8</button>
+            <button class="calc-key" onclick="appendInput('9')">9</button>
+            <button class="calc-key operator" onclick="appendInput('-')">-</button>
+
+            <button class="calc-key" onclick="appendInput('4')">4</button>
+            <button class="calc-key" onclick="appendInput('5')">5</button>
+            <button class="calc-key" onclick="appendInput('6')">6</button>
+            <button class="calc-key operator" onclick="appendInput('+')">+</button>
+            
+            <button class="calc-key" onclick="appendInput('1')">1</button>
+            <button class="calc-key" onclick="appendInput('2')">2</button>
+            <button class="calc-key" onclick="appendInput('3')">3</button>
+            <button class="calc-key operator" style="grid-row: span 2; height: 100%;" onclick="runCalculation()">=</button>
+            
+            <button class="calc-key" style="grid-column: span 2;" onclick="appendInput('0')">0</button>
+            <button class="calc-key" onclick="appendInput('.')">.</button>
+        </div>
+
+        <!-- Scientific Mode Grid -->
+        <div id="scientific-layout" class="grid-scientific hidden">
+            <button class="calc-key clear" onclick="clearDisplay()">C</button>
+            <button class="calc-key backspace" aria-label="Backspace" title="Backspace" onclick="backspace()">⌫</button>
+            <button class="calc-key operator" onclick="runScientific('sin')">sin</button>
+            <button class="calc-key operator" onclick="runScientific('cos')">cos</button>
+            <button class="calc-key operator" onclick="runScientific('tan')">tan</button>
+            
+            <button class="calc-key operator" onclick="appendInput('/')">/</button>
+            <button class="calc-key" onclick="appendInput('7')">7</button>
+            <button class="calc-key" onclick="appendInput('8')">8</button>
+            <button class="calc-key" onclick="appendInput('9')">9</button>
+            <button class="calc-key operator" onclick="runScientific('sqrt')">√</button>
+            
+            <button class="calc-key operator" onclick="appendInput('*')">*</button>
+            <button class="calc-key" onclick="appendInput('4')">4</button>
+            <button class="calc-key" onclick="appendInput('5')">5</button>
+            <button class="calc-key" onclick="appendInput('6')">6</button>
+            <button class="calc-key operator" onclick="runScientific('log')">log</button>
+            
+            <button class="calc-key operator" onclick="appendInput('-')">-</button>
+            <button class="calc-key" onclick="appendInput('1')">1</button>
+            <button class="calc-key" onclick="appendInput('2')">2</button>
+            <button class="calc-key" onclick="appendInput('3')">3</button>
+            <button class="calc-key operator" onclick="runScientific('pow')">x²</button>
+            <button class="calc-key operator" onclick="appendInput('+')">+</button>
+            
+            <button class="calc-key" style="grid-column: span 2;" onclick="appendInput('0')">0</button>
+            <button class="calc-key" onclick="appendInput('.')">.</button>
+            <button class="calc-key operator" style="grid-column: span 2;" onclick="runCalculation()">=</button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        const shell = document.getElementById('calculator-shell');
+        const simpleLayout = document.getElementById('simple-layout');
+        const scientificLayout = document.getElementById('scientific-layout');
+        
+        const btnSimple = document.getElementById('btn-simple');
+        const btnScientific = document.getElementById('btn-scientific');
+        const mainTitle = document.getElementById('main-title');
+
+        // Logic to switch view layouts safely
+        function toggleInterface(mode) {
+            clearDisplay();
+            shell.classList.remove('hidden');
+            btnSimple.classList.remove('active');
+            btnScientific.classList.remove('active');
+
+            if (mode === 'simple') {
+                mainTitle.innerText = "My Simple Calculator";
+                btnSimple.classList.add('active');
+                simpleLayout.classList.remove('hidden');
+                scientificLayout.classList.add('hidden');
+            } else if (mode === 'scientific') {
+                mainTitle.innerText = "Scientific Calculator";
+                btnScientific.classList.add('active');
+                scientificLayout.classList.remove('hidden');
+                simpleLayout.classList.add('hidden');
+            }
+        }
+
+        // Functional core processing
+        function appendInput(value) {
+            if (display.value === '0' || display.value === 'Error' || display.value === 'NaN') {
+                display.value = value;
+            } else {
+                display.value += value;
+            }
+        }
+
+        function clearDisplay() {
+            display.value = '0';
+        }
+
+        function backspace() {
+            if (display.value === 'Error' || display.value === 'NaN' || display.value.length <= 1) {
+                clearDisplay();
+                return;
+            }
+
+            display.value = display.value.slice(0, -1);
+        }
+
+        function runCalculation() {
+            try {
+                // Evaluates the current string math equation safely
+                let result = Function('"use strict";return (' + display.value + ')')();
+                if (result === undefined || isNaN(result)) {
+                    display.value = 'Error';
+                } else {
+                                  // Limits decimal overflow issues (e.g. 0.1 + 0.2 = 0.300000004)
+        display.value = Number(result.toFixed(8)).toString();}
+                  }  catch (e) {
+        display.value = 'Error';
+    }
+}
+
+function runScientific(type) {
+    try {
+        // First evaluate whatever equation is already written before running a scientific function
+        let evaluatedBase = Function('"use strict";return (' + display.value + ')')();
+        let val = parseFloat(evaluatedBase);
+        
+        if (isNaN(val)) {
+            display.value = 'Error';
+            return;
+        }
+
+        let output = 0;
+        switch (type) {
+            case 'sin': 
+                output = Math.sin(val * Math.PI / 180); // Converts degrees to radians
+                break;
+            case 'cos': 
+                output = Math.cos(val * Math.PI / 180); // Converts degrees to radians
+                break;
+            case 'tan': 
+                output = Math.tan(val * Math.PI / 180); // Converts degrees to radians
+                break;
+            case 'log': 
+                if (val <= 0) { display.value = 'Error'; return; }
+                output = Math.log10(val); 
+                break;
+            case 'sqrt': 
+                if (val < 0) { display.value = 'Error'; return; }
+                output = Math.sqrt(val); 
+                break;
+            case 'pow': 
+                output = Math.pow(val, 2); 
+                break;
+        }
+        
+        display.value = Number(output.toFixed(8)).toString();
+    } catch (e) {
+        display.value = 'Error';
+    }
+} 
+</script>
+</body>
+</html>
